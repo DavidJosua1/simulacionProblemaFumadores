@@ -3,143 +3,584 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulador: Problema de los Fumadores</title>
+    <title>Problema de los Fumadores | Sistemas Operativos</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Tailwind CSS para diseño moderno -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons para iconos limpios -->
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-4">
-
-    <header class="w-full max-w-5xl text-center py-6 mb-4">
-        <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
-            Problema de los Fumadores (Sistemas Operativos)
-        </h1>
-        <p class="text-slate-400 mt-2 text-sm max-w-2xl mx-auto">
-            Simulador interactivo de concurrencia usando JavaScript (asimilando hilos mediante promesas asíncronas y gestión de semáforos).
-        </p>
+<body data-tab="teoria">
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div>
+                <h1>Problema de los Fumadores</h1>
+                <p class="subtitle">Sincronización de procesos · Sistemas Operativos</p>
+            </div>
+            <span id="systemStatus" class="status-pill">Preparado</span>
+        </div>
     </header>
 
-    <main class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <!-- Panel de Control y Semáforos -->
-        <section class="md:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
-            <div>
-                <h2 class="text-lg font-semibold text-slate-200 border-b border-slate-800 pb-3 mb-4 flex items-center gap-2">
-                    <i data-lucide="settings" class="w-5 h-5 text-blue-400"></i> Controles
-                </h2>
-
-                <div class="flex flex-col gap-3">
-                    <button id="btnStart" class="bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20">
-                        <i data-lucide="play" class="w-4 h-4"></i> Iniciar Simulación
-                    </button>
-                    <button id="btnPause" disabled class="bg-slate-800 text-slate-500 font-medium py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 cursor-not-allowed">
-                        <i data-lucide="pause" class="w-4 h-4"></i> Pausar
-                    </button>
-                    <button id="btnReset" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2">
-                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reiniciar
-                    </button>
-                </div>
-
-                <div class="mt-6">
-                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Velocidad de Ciclos</label>
-                    <input id="speedRange" type="range" min="500" max="3000" step="200" value="1500" class="w-full accent-blue-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
-                    <div class="flex justify-between text-xs text-slate-500 mt-1">
-                        <span>Rápido</span>
-                        <span>Lento</span>
-                    </div>
-                </div>
+    <nav class="navbar" aria-label="Secciones">
+        <div class="navbar-inner">
+            <div class="tabs" role="tablist">
+                <button id="tab-teoria" class="tab" role="tab" data-tab="teoria"
+                        aria-controls="view-teoria" aria-selected="true">Teoría</button>
+                <button id="tab-simulacion" class="tab" role="tab" data-tab="simulacion"
+                        aria-controls="view-simulacion" aria-selected="false" tabindex="-1">Simulación</button>
             </div>
 
-            <!-- Contadores de Semáforos -->
-            <div class="mt-6 pt-4 border-t border-slate-800">
-                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Semáforos (S.O.)</h3>
-                <div class="space-y-2 text-xs font-mono bg-slate-950 p-3 rounded-xl border border-slate-900">
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-400">sem_agente:</span>
-                        <span id="semAgente" class="text-emerald-400 font-bold">1</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-400">sem_fumador1:</span>
-                        <span id="semF1" class="text-amber-400 font-bold">0</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-400">sem_fumador2:</span>
-                        <span id="semF2" class="text-amber-400 font-bold">0</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-400">sem_fumador3:</span>
-                        <span id="semF3" class="text-amber-400 font-bold">0</span>
-                    </div>
-                </div>
+            <div class="sim-controls">
+                <button id="btnStart" class="button primary">Iniciar simulación</button>
+                <button id="btnPause" class="button secondary" disabled>Pausar</button>
+                <button id="btnStep" class="button secondary">Siguiente paso</button>
+                <button id="btnReset" class="button ghost">Reiniciar</button>
             </div>
-        </section>
+        </div>
+    </nav>
 
-        <!-- Zona Central: Mesa y Fumadores -->
-        <section class="md:col-span-2 flex flex-col gap-6">
-            
-            <!-- Mesa Compartida -->
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center shadow-xl relative overflow-hidden">
-                <div class="absolute top-0 right-0 bg-blue-500/10 text-blue-400 text-xs px-3 py-1 rounded-bl-xl font-medium border-l border-b border-blue-500/20">
-                    Área Crítica / Mesa
+    <main class="container">
+
+        <!-- =====================================================
+             SECCIÓN 1 · TEORÍA
+             ===================================================== -->
+        <div id="view-teoria" class="view theory" role="tabpanel" aria-labelledby="tab-teoria">
+
+            <section class="theory-hero">
+                <div>
+                    <h2>¿De qué trata este problema?</h2>
+                    <p>
+                        Es un problema clásico de sincronización entre procesos. Un agente y tres
+                        fumadores comparten una mesa, y el reto es lograr que todos cooperen sin
+                        bloquearse, sin pisarse y sin que nadie se quede esperando para siempre.
+                    </p>
                 </div>
-                
-                <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Ingredientes en la Mesa</h2>
-                <div id="agentStatus" class="text-sm font-medium text-blue-300 mb-6">El agente está esperando...</div>
+                <div class="index-chips" aria-label="Índice">
+                    <button class="chip" data-scroll="sec-problema">El problema</button>
+                    <button class="chip" data-scroll="sec-solucion">La solución</button>
+                    <button class="chip" data-scroll="sec-conceptos">Conceptos clave</button>
+                    <button class="chip" data-scroll="sec-mecanismos">Mecanismos</button>
+                    <button class="chip" data-scroll="sec-relacion">Relación con la simulación</button>
+                </div>
+            </section>
 
-                <div class="flex justify-center items-center gap-4 min-h-[90px]">
-                    <div id="item1" class="w-20 h-20 bg-slate-950 border border-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 opacity-40 transition-all duration-300 shadow-inner">
-                        <i data-lucide="package" class="w-6 h-6 text-slate-500"></i>
-                        <span class="text-xs text-slate-500 font-medium"> Vacío </span>
+            <!-- ---------- El problema ---------- -->
+            <section id="sec-problema" class="t-section">
+                <h2 class="t-title">El problema</h2>
+
+                <div class="two-col">
+                    <div class="prose">
+                        <p>
+                            Fue planteado por Suhas Patil en 1971 y se usa para estudiar cómo
+                            coordinar procesos que compiten por recursos compartidos.
+                        </p>
+                        <ul class="plain">
+                            <li><strong>Hay cuatro participantes:</strong> un agente y tres fumadores.</li>
+                            <li><strong>Para fumar se necesitan tres ingredientes:</strong> tabaco, papel y cerillas.</li>
+                            <li><strong>Cada fumador tiene un ingrediente en cantidad ilimitada</strong> y le faltan los otros dos.</li>
+                            <li><strong>El agente coloca en la mesa dos ingredientes distintos.</strong> Solo el fumador que posee el tercero puede armar y fumar el cigarro.</li>
+                            <li><strong>Al terminar, el fumador avisa</strong> y el agente coloca otra pareja.</li>
+                        </ul>
                     </div>
-                    <div id="item2" class="w-20 h-20 bg-slate-950 border border-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 opacity-40 transition-all duration-300 shadow-inner">
-                        <i data-lucide="package" class="w-6 h-6 text-slate-500"></i>
-                        <span class="text-xs text-slate-500 font-medium"> Vacío </span>
+
+                    <figure class="diagram">
+                        <svg viewBox="0 0 760 250" role="img"
+                             aria-label="El agente coloca ingredientes en la mesa y despierta al fumador que posee el ingrediente faltante">
+                            <defs>
+                                <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+                                        markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                                    <path d="M0 0 L10 5 L0 10 z" class="svg-arrowhead"/>
+                                </marker>
+                            </defs>
+
+                            <rect class="svg-box c-violet" x="20" y="80" width="150" height="70" rx="14"/>
+                            <text class="svg-title c-violet" x="95" y="112" text-anchor="middle">Agente</text>
+                            <text class="svg-sub" x="95" y="134" text-anchor="middle">pone 2 ingredientes</text>
+
+                            <line class="svg-line" x1="170" y1="115" x2="298" y2="115" marker-end="url(#arrow)"/>
+
+                            <rect class="svg-box c-gold" x="300" y="68" width="170" height="94" rx="14"/>
+                            <text class="svg-title c-gold" x="385" y="102" text-anchor="middle">Mesa</text>
+                            <text class="svg-sub" x="385" y="124" text-anchor="middle">recurso compartido</text>
+                            <text class="svg-sub" x="385" y="143" text-anchor="middle">sección crítica</text>
+
+                            <line class="svg-line" x1="470" y1="115" x2="553" y2="41" marker-end="url(#arrow)"/>
+                            <line class="svg-line" x1="470" y1="115" x2="553" y2="115" marker-end="url(#arrow)"/>
+                            <line class="svg-line" x1="470" y1="115" x2="553" y2="189" marker-end="url(#arrow)"/>
+
+                            <rect class="svg-box c-green" x="555" y="15" width="195" height="52" rx="12"/>
+                            <text class="svg-title c-green" x="652" y="46" text-anchor="middle">Fumador 1 · tabaco</text>
+
+                            <rect class="svg-box c-blue" x="555" y="89" width="195" height="52" rx="12"/>
+                            <text class="svg-title c-blue" x="652" y="120" text-anchor="middle">Fumador 2 · papel</text>
+
+                            <rect class="svg-box c-orange" x="555" y="163" width="195" height="52" rx="12"/>
+                            <text class="svg-title c-orange" x="652" y="194" text-anchor="middle">Fumador 3 · cerillas</text>
+
+                            <path class="svg-line dashed" d="M652 215 L652 238 L95 238 L95 152" marker-end="url(#arrow)"/>
+                            <text class="svg-sub" x="380" y="230" text-anchor="middle">el fumador libera la mesa y avisa al agente</text>
+                        </svg>
+                        <figcaption>Flujo general: el agente entrega recursos y un único fumador los aprovecha.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="callout warn">
+                    <h3>¿Por qué es difícil?</h3>
+                    <p>
+                        Si cada fumador toma por su cuenta lo que ve en la mesa, el sistema puede
+                        bloquearse. Por ejemplo, el fumador 1 toma el papel y el fumador 2 toma el
+                        tabaco: ahora ambos esperan las cerillas, nadie puede fumar y el agente
+                        tampoco puede colocar nada nuevo. Eso es un <strong>interbloqueo</strong>.
+                    </p>
+                </div>
+            </section>
+
+            <!-- ---------- La solución ---------- -->
+            <section id="sec-solucion" class="t-section">
+                <h2 class="t-title">La solución</h2>
+                <p class="lead">
+                    La idea es que ningún fumador decida por su cuenta. Un coordinador
+                    (un monitor, o semáforos bien dispuestos) observa la mesa y despierta
+                    únicamente al fumador que puede completar el cigarro.
+                </p>
+
+                <ol class="steps">
+                    <li><span>El agente espera a que la mesa esté libre.</span></li>
+                    <li><span>Coloca dos ingredientes distintos sobre la mesa.</span></li>
+                    <li><span>El monitor identifica quién posee el ingrediente faltante y despierta solo a ese fumador.</span></li>
+                    <li><span>El fumador retira los ingredientes y fuma; los otros dos siguen durmiendo.</span></li>
+                    <li><span>Al terminar libera la mesa y avisa al agente. Todo vuelve al paso 1.</span></li>
+                </ol>
+
+                <div class="code-grid">
+                    <figure class="code-card c-violet">
+                        <figcaption>Agente</figcaption>
+<pre><code>repetir siempre:
+    esperar(semAgente)
+    elegir dos ingredientes
+    colocarlos en la mesa
+    monitor.despertar(dueño del tercero)</code></pre>
+                    </figure>
+
+                    <figure class="code-card c-gold">
+                        <figcaption>Monitor de la mesa</figcaption>
+<pre><code>monitor Mesa:
+    colocar(a, b):
+        ingredientes = {a, b}
+        k = dueño del ingrediente faltante
+        señalar(semFumador[k])</code></pre>
+                    </figure>
+
+                    <figure class="code-card c-green">
+                        <figcaption>Fumador k</figcaption>
+<pre><code>repetir siempre:
+    esperar(semFumador[k])
+    // sección crítica:
+    retirar ingredientes
+    liberar la mesa
+    señalar(semAgente)
+    fumar</code></pre>
+                    </figure>
+                </div>
+
+                <div class="props">
+                    <div class="prop c-mint"><strong>Exclusión mutua</strong><span>Solo un participante usa la mesa a la vez.</span></div>
+                    <div class="prop c-blue"><strong>Sin interbloqueo</strong><span>Nadie retiene ingredientes mientras espera otros.</span></div>
+                    <div class="prop c-pink"><strong>Sin carreras</strong><span>Dos fumadores no pueden reclamar la misma pareja.</span></div>
+                    <div class="prop c-orange"><strong>Equidad</strong><span>Depende de qué parejas ofrezca el agente a lo largo del tiempo.</span></div>
+                </div>
+            </section>
+
+            <!-- ---------- Conceptos clave ---------- -->
+            <section id="sec-conceptos" class="t-section">
+                <h2 class="t-title">Conceptos clave</h2>
+
+                <div class="cards-grid">
+                    <article class="t-card c-violet">
+                        <h3>Proceso e hilo</h3>
+                        <p>Un proceso es un programa en ejecución con su propio espacio de memoria. Un hilo es una línea de ejecución dentro de un proceso y comparte su memoria con los demás hilos.</p>
+                        <p class="eg">Aquí, el agente y cada fumador se comportan como hilos concurrentes.</p>
+                    </article>
+
+                    <article class="t-card c-gold">
+                        <h3>Recurso compartido</h3>
+                        <p>Todo elemento que varios procesos necesitan usar: memoria, un archivo, un dispositivo o, en este caso, la mesa con sus ingredientes.</p>
+                        <p class="eg">Los ingredientes son recursos; la mesa es el lugar donde se comparten.</p>
+                    </article>
+
+                    <article class="t-card c-orange">
+                        <h3>Sección crítica</h3>
+                        <p>Fragmento de código que accede a un recurso compartido y que no debe ejecutarse a la vez por dos procesos.</p>
+                        <p class="eg">Retirar los ingredientes de la mesa es la sección crítica.</p>
+                    </article>
+
+                    <article class="t-card c-green">
+                        <h3>Exclusión mutua</h3>
+                        <p>Garantía de que, si un proceso está dentro de su sección crítica, ningún otro puede entrar hasta que salga.</p>
+                        <p class="eg">Mientras un fumador usa la mesa, el agente y los demás esperan.</p>
+                    </article>
+
+                    <article class="t-card c-pink">
+                        <h3>Condición de carrera</h3>
+                        <p>Ocurre cuando el resultado depende del orden en que se intercalan operaciones sobre datos compartidos sin sincronización.</p>
+                        <p class="eg">Dos fumadores tomando a la vez la misma pareja de ingredientes.</p>
+                    </article>
+
+                    <article class="t-card c-rose">
+                        <h3>Interbloqueo (deadlock)</h3>
+                        <p>Varios procesos quedan bloqueados para siempre porque cada uno espera algo que tiene otro. Requiere cuatro condiciones a la vez:</p>
+                        <ul class="mini">
+                            <li>exclusión mutua</li>
+                            <li>retención y espera</li>
+                            <li>no apropiación</li>
+                            <li>espera circular</li>
+                        </ul>
+                    </article>
+
+                    <article class="t-card c-blue">
+                        <h3>Inanición</h3>
+                        <p>Un proceso puede esperar indefinidamente porque otros reciben siempre los recursos o los turnos antes que él.</p>
+                        <p class="eg">Un fumador que casi nunca recibe su pareja de ingredientes.</p>
+                    </article>
+
+                    <article class="t-card c-mint">
+                        <h3>Concurrencia y paralelismo</h3>
+                        <p>Concurrencia: varias tareas progresan durante el mismo intervalo, aunque se intercalen. Paralelismo: varias tareas se ejecutan físicamente al mismo tiempo, por ejemplo en distintos núcleos.</p>
+                    </article>
+
+                    <article class="t-card c-violet">
+                        <h3>Cambio de contexto</h3>
+                        <p>El procesador guarda el estado de una tarea y restaura el de otra para continuar su ejecución. Tiene un costo, por eso no conviene abusar de él.</p>
+                    </article>
+                </div>
+            </section>
+
+            <!-- ---------- Mecanismos ---------- -->
+            <section id="sec-mecanismos" class="t-section">
+                <h2 class="t-title">Mecanismos de sincronización y comunicación</h2>
+                <p class="lead">
+                    Sirven para que los procesos se coordinen (sincronización) y para que
+                    intercambien información (comunicación).
+                </p>
+
+                <div class="table-wrap">
+                    <table class="compare">
+                        <thead>
+                            <tr>
+                                <th>Mecanismo</th>
+                                <th>Cómo funciona</th>
+                                <th>Ventaja</th>
+                                <th>Cuidado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row"><span class="dot c-blue"></span>Semáforo</th>
+                                <td>Contador entero con dos operaciones atómicas: <em>esperar</em> (P) y <em>señalar</em> (V). Si vale 0, quien espera se bloquea.</td>
+                                <td>Sencillo y flexible: sirve para exclusión mutua y para avisar eventos.</td>
+                                <td>Olvidar un señalar o invertir el orden de las esperas puede causar interbloqueo.</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><span class="dot c-gold"></span>Monitor</th>
+                                <td>Módulo que agrupa datos y operaciones; solo un proceso está activo dentro a la vez. Usa variables de condición con <em>esperar</em> y <em>señalar</em>.</td>
+                                <td>La exclusión mutua es automática, el código queda más ordenado y seguro.</td>
+                                <td>Necesita apoyo del lenguaje (por ejemplo, <code>synchronized</code> en Java).</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><span class="dot c-green"></span>Mutex (cerrojo)</th>
+                                <td>Semáforo binario con dueño: quien lo bloquea es quien debe liberarlo (<em>lock</em> y <em>unlock</em>).</td>
+                                <td>Ideal para proteger una sección crítica corta.</td>
+                                <td>No sirve por sí solo para coordinar el orden entre procesos.</td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><span class="dot c-orange"></span>Espera activa (loops)</th>
+                                <td>El proceso repite una comprobación en un ciclo hasta que se cumple la condición, por ejemplo <code>mientras (!listo) {}</code>.</td>
+                                <td>No hay cambio de contexto; útil si la espera es muy corta (spinlocks).</td>
+                                <td>Consume CPU mientras espera, así que es mala idea para esperas largas.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="sub-title">Comunicación entre procesos</h3>
+                <div class="ipc">
+                    <div class="ipc-item c-violet"><strong>Memoria compartida</strong><span>Los procesos leen y escriben una misma zona de memoria. La mesa de este problema funciona así.</span></div>
+                    <div class="ipc-item c-blue"><strong>Paso de mensajes</strong><span>Intercambian datos con operaciones de enviar y recibir; el sistema operativo hace de intermediario.</span></div>
+                    <div class="ipc-item c-green"><strong>Tuberías (pipes)</strong><span>Canal en el que lo que escribe un proceso lo lee otro, en orden.</span></div>
+                    <div class="ipc-item c-orange"><strong>Señales y sockets</strong><span>Las señales avisan de eventos; los sockets comunican procesos, incluso en máquinas distintas.</span></div>
+                </div>
+            </section>
+
+            <!-- ---------- Relación con la simulación ---------- -->
+            <section id="sec-relacion" class="t-section">
+                <h2 class="t-title">Relación con la simulación</h2>
+
+                <div class="table-wrap">
+                    <table class="compare map">
+                        <thead>
+                            <tr>
+                                <th>En el problema</th>
+                                <th>Concepto de SO</th>
+                                <th>Qué verás en la simulación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><th scope="row">Agente y fumadores</th><td>Procesos o hilos concurrentes</td><td>Las tarjetas del agente y de los tres fumadores, cada una con su color.</td></tr>
+                            <tr><th scope="row">Mesa</th><td>Recurso compartido y sección crítica</td><td>El panel «Mesa compartida», que pasa de libre a ocupada.</td></tr>
+                            <tr><th scope="row">Ingredientes</th><td>Recursos</td><td>Las dos piezas que aparecen sobre la mesa.</td></tr>
+                            <tr><th scope="row">Indicadores 0 y 1</th><td>Semáforos</td><td>Los números junto al agente y a cada fumador.</td></tr>
+                            <tr><th scope="row">Coordinador</th><td>Monitor</td><td>Los mensajes «El monitor despierta a…» en el registro.</td></tr>
+                            <tr><th scope="row">Cambio de turno</th><td>Cambio de contexto (analogía)</td><td>El contador «Cambios de turno».</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="note">
+                    La simulación es didáctica: representa los conceptos en una página web, no crea
+                    hilos reales del sistema operativo ni usa semáforos nativos.
+                </p>
+
+                <div class="cta">
+                    <button class="button primary" data-goto="simulacion">Ir a la simulación</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- =====================================================
+             SECCIÓN 2 · SIMULACIÓN
+             ===================================================== -->
+        <div id="view-simulacion" class="view" role="tabpanel" aria-labelledby="tab-simulacion" hidden>
+
+            <section class="stats-grid" aria-label="Resumen de la simulación">
+                <article class="stat-card">
+                    <span>Rondas completadas</span>
+                    <strong id="completedCount">0 / 10</strong>
+                    <div class="mini-progress"><div id="progressBar"></div></div>
+                </article>
+                <article class="stat-card">
+                    <span>Ronda actual</span>
+                    <strong id="currentRound">1</strong>
+                    <small id="roundStatus">Pendiente</small>
+                </article>
+                <article class="stat-card">
+                    <span>Participante activo</span>
+                    <strong id="activeParticipant">Agente</strong>
+                    <small id="activeDescription">Esperando instrucciones</small>
+                </article>
+                <article class="stat-card">
+                    <span>Tiempo transcurrido</span>
+                    <strong id="elapsedTime">00:00</strong>
+                    <small id="contextCount">Cambios de turno: 0</small>
+                </article>
+            </section>
+
+            <section class="explanation">
+                <div class="explanation-text">
+                    <h2 id="stepTitle">La simulación está preparada</h2>
+                    <p id="stepExplanation">
+                        Configura las rondas y el modo de ejecución. Después, inicia la
+                        simulación o avanza paso a paso.
+                    </p>
+                </div>
+                <div class="concept-reference">
+                    <span>Concepto relacionado</span>
+                    <strong id="conceptBadge">Sincronización</strong>
+                </div>
+            </section>
+
+            <section class="scene">
+                <div class="flow">
+                    <div class="agent-card" id="agentCard">
+                        <div class="entity-icon">A</div>
+                        <div class="entity-info">
+                            <strong>Agente</strong>
+                            <p id="agentStatus">Esperando para colocar ingredientes</p>
+                        </div>
+                        <div class="agent-side">
+                            <span id="agentBadge" class="badge">Tiene el turno</span>
+                            <span id="semAgente" class="semaphore available">1</span>
+                        </div>
+                    </div>
+
+                    <div id="tableArea" class="table-area">
+                        <div class="table-head">
+                            <span class="table-label">Mesa compartida</span>
+                            <span id="tableBadge" class="badge">Mesa libre</span>
+                        </div>
+                        <div class="table-ingredients">
+                            <div id="item1" class="ingredient empty">Vacío</div>
+                            <div id="item2" class="ingredient empty">Vacío</div>
+                        </div>
+                        <p id="tableStatus">No hay ingredientes sobre la mesa.</p>
                     </div>
                 </div>
-            </div>
 
-            <!-- Tarjetas de los 3 Fumadores -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                
-                <div id="cardF1" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center text-center transition-all duration-300 shadow-xl">
-                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-blue-400 font-bold mb-2 border border-slate-700">F1</div>
-                    <h3 class="font-semibold text-sm text-slate-200">Fumador 1</h3>
-                    <p class="text-xs text-slate-400 mt-0.5 mb-3">Tiene: <b>Tabaco</b><br>Falta: Papel + Cerillas</p>
-                    <span id="badgeF1" class="mt-auto px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">Durmiendo</span>
+                <div class="ingredient-picker">
+                    <div class="picker-row">
+                        <div class="picker-field">
+                            <label for="ingredientPair">Ingredientes que colocará el agente</label>
+                            <select id="ingredientPair">
+                                <option value="tabaco,papel">Tabaco + papel</option>
+                                <option value="tabaco,cerillas">Tabaco + cerillas</option>
+                                <option value="papel,cerillas">Papel + cerillas</option>
+                            </select>
+                        </div>
+                        <button id="btnPlace" class="button primary">Colocar en la mesa</button>
+                    </div>
+                    <p id="missingIngredient" class="hint">
+                        El fumador que tiene cerillas podrá utilizar estos ingredientes.
+                    </p>
+                    <p class="hint">Solo se pueden colocar ingredientes cuando la mesa está libre y el agente tiene el turno.</p>
                 </div>
 
-                <div id="cardF2" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center text-center transition-all duration-300 shadow-xl">
-                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-blue-400 font-bold mb-2 border border-slate-700">F2</div>
-                    <h3 class="font-semibold text-sm text-slate-200">Fumador 2</h3>
-                    <p class="text-xs text-slate-400 mt-0.5 mb-3">Tiene: <b>Papel</b><br>Falta: Tabaco + Cerillas</p>
-                    <span id="badgeF2" class="mt-auto px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">Durmiendo</span>
+                <div class="smokers-grid">
+                    <article id="cardF1" class="smoker-card">
+                        <div class="smoker-top">
+                            <div class="entity-icon">F1</div>
+                            <span id="badgeF1" class="state-badge">Esperando</span>
+                        </div>
+                        <h3>Fumador 1</h3>
+                        <p class="owns">Posee <strong>tabaco</strong></p>
+                        <p class="needs">Necesita papel y cerillas</p>
+                        <div class="share">
+                            <div class="bar-track"><div id="barF1" class="bar-fill"></div></div>
+                            <strong id="percentF1">0%</strong>
+                        </div>
+                        <div class="smoker-foot">
+                            <p class="counter">Fumó <strong id="countF1">0</strong> veces</p>
+                            <p class="semaphore-line">Semáforo <strong id="semF1">0</strong></p>
+                        </div>
+                    </article>
+
+                    <article id="cardF2" class="smoker-card">
+                        <div class="smoker-top">
+                            <div class="entity-icon">F2</div>
+                            <span id="badgeF2" class="state-badge">Esperando</span>
+                        </div>
+                        <h3>Fumador 2</h3>
+                        <p class="owns">Posee <strong>papel</strong></p>
+                        <p class="needs">Necesita tabaco y cerillas</p>
+                        <div class="share">
+                            <div class="bar-track"><div id="barF2" class="bar-fill"></div></div>
+                            <strong id="percentF2">0%</strong>
+                        </div>
+                        <div class="smoker-foot">
+                            <p class="counter">Fumó <strong id="countF2">0</strong> veces</p>
+                            <p class="semaphore-line">Semáforo <strong id="semF2">0</strong></p>
+                        </div>
+                    </article>
+
+                    <article id="cardF3" class="smoker-card">
+                        <div class="smoker-top">
+                            <div class="entity-icon">F3</div>
+                            <span id="badgeF3" class="state-badge">Esperando</span>
+                        </div>
+                        <h3>Fumador 3</h3>
+                        <p class="owns">Posee <strong>cerillas</strong></p>
+                        <p class="needs">Necesita tabaco y papel</p>
+                        <div class="share">
+                            <div class="bar-track"><div id="barF3" class="bar-fill"></div></div>
+                            <strong id="percentF3">0%</strong>
+                        </div>
+                        <div class="smoker-foot">
+                            <p class="counter">Fumó <strong id="countF3">0</strong> veces</p>
+                            <p class="semaphore-line">Semáforo <strong id="semF3">0</strong></p>
+                        </div>
+                    </article>
                 </div>
+                <p class="hint share-hint">La barra de cada fumador indica la proporción de rondas completadas.</p>
+            </section>
 
-                <div id="cardF3" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center text-center transition-all duration-300 shadow-xl">
-                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-blue-400 font-bold mb-2 border border-slate-700">F3</div>
-                    <h3 class="font-semibold text-sm text-slate-200">Fumador 3</h3>
-                    <p class="text-xs text-slate-400 mt-0.5 mb-3">Tiene: <b>Cerillas</b><br>Falta: Tabaco + Papel</p>
-                    <span id="badgeF3" class="mt-auto px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">Durmiendo</span>
-                </div>
+            <div class="extras">
+                <details class="drawer">
+                    <summary>Ajustes de la simulación</summary>
+                    <div class="drawer-body">
+                        <div class="config-grid">
+                            <div class="field">
+                                <label for="roundLimit">Cantidad de rondas</label>
+                                <select id="roundLimit">
+                                    <option value="5">5 rondas</option>
+                                    <option value="10" selected>10 rondas</option>
+                                    <option value="20">20 rondas</option>
+                                    <option value="0">Indefinidas</option>
+                                </select>
+                            </div>
 
+                            <div class="field">
+                                <label for="executionMode">Modo de ejecución</label>
+                                <select id="executionMode">
+                                    <option value="auto">Automático</option>
+                                    <option value="step">Paso a paso</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label for="agentMode">Control del agente</label>
+                                <select id="agentMode">
+                                    <option value="manual">Manual: yo elijo los ingredientes</option>
+                                    <option value="auto">Automático: el agente los elige</option>
+                                </select>
+                            </div>
+
+                            <div class="field">
+                                <label for="selectionMode">Selección automática de ingredientes</label>
+                                <select id="selectionMode">
+                                    <option value="random">Aleatoria</option>
+                                    <option value="turns">Por turnos, para repartir las oportunidades</option>
+                                </select>
+                            </div>
+
+                            <div class="field speed-field">
+                                <label for="speedRange">Velocidad de ejecución</label>
+                                <input id="speedRange" type="range" min="300" max="4000"
+                                       step="100" value="1800">
+                                <div class="range-labels">
+                                    <span>Rápida</span>
+                                    <strong id="speedValue">1.8 segundos</strong>
+                                    <span>Lenta</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="drawer">
+                    <summary>Registro de eventos</summary>
+                    <div class="drawer-body">
+                        <div class="drawer-actions">
+                            <button id="btnClearLog" class="button small">Limpiar registro</button>
+                        </div>
+                        <div id="consoleLog" class="event-log" aria-live="polite"></div>
+                    </div>
+                </details>
+
+                <details class="drawer">
+                    <summary>Conceptos de consulta rápida</summary>
+                    <div class="drawer-body">
+                        <div class="concepts-body">
+                            <div class="concept-list">
+                                <button class="concept-button active" data-concept="concurrency">Concurrencia</button>
+                                <button class="concept-button" data-concept="parallelism">Paralelismo</button>
+                                <button class="concept-button" data-concept="context">Cambio de contexto</button>
+                                <button class="concept-button" data-concept="critical">Sección crítica</button>
+                                <button class="concept-button" data-concept="race">Condición de carrera</button>
+                                <button class="concept-button" data-concept="deadlock">Deadlock</button>
+                                <button class="concept-button" data-concept="starvation">Inanición</button>
+                                <button class="concept-button" data-concept="semaphore">Semáforos</button>
+                            </div>
+                            <div class="concept-detail">
+                                <h3 id="conceptTitle">Concurrencia</h3>
+                                <p id="conceptDescription"></p>
+                                <p id="conceptExample" class="muted"></p>
+                            </div>
+                        </div>
+                    </div>
+                </details>
             </div>
-
-        </section>
-
-        <!-- Consola de Eventos / Log de Concurrencia -->
-        <section class="md:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
-            <h2 class="text-sm font-semibold text-slate-200 border-b border-slate-800 pb-3 mb-3 flex items-center gap-2">
-                <i data-lucide="terminal" class="w-4 h-4 text-blue-400"></i> Consola del Sistema Operativo (Log de Hilos)
-            </h2>
-            <div id="consoleLog" class="bg-slate-950 border border-slate-900 rounded-xl p-4 h-40 overflow-y-auto font-mono text-xs text-slate-300 space-y-1.5 shadow-inner">
-                <div class="text-slate-500">[Sistema] Simulador inicializado. Presione "Iniciar Simulación" para comenzar.</div>
-            </div>
-        </section>
-
+        </div>
     </main>
 
+    <footer>
+        Proyecto académico: Problema de los Fumadores
+    </footer>
+
     <script src="script.js"></script>
+    <script src="nav.js"></script>
 </body>
 </html>
