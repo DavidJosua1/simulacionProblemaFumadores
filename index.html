@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador: Problema de los Fumadores</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Tailwind CSS para diseño moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons para iconos limpios -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-4">
+
+    <header class="w-full max-w-5xl text-center py-6 mb-4">
+        <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
+            Problema de los Fumadores (Sistemas Operativos)
+        </h1>
+        <p class="text-slate-400 mt-2 text-sm max-w-2xl mx-auto">
+            Simulador interactivo de concurrencia usando JavaScript (asimilando hilos mediante promesas asíncronas y gestión de semáforos).
+        </p>
+    </header>
+
+    <main class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Panel de Control y Semáforos -->
+        <section class="md:col-span-1 bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between shadow-xl">
+            <div>
+                <h2 class="text-lg font-semibold text-slate-200 border-b border-slate-800 pb-3 mb-4 flex items-center gap-2">
+                    <i data-lucide="settings" class="w-5 h-5 text-blue-400"></i> Controles
+                </h2>
+
+                <div class="flex flex-col gap-3">
+                    <button id="btnStart" class="bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20">
+                        <i data-lucide="play" class="w-4 h-4"></i> Iniciar Simulación
+                    </button>
+                    <button id="btnPause" disabled class="bg-slate-800 text-slate-500 font-medium py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2 cursor-not-allowed">
+                        <i data-lucide="pause" class="w-4 h-4"></i> Pausar
+                    </button>
+                    <button id="btnReset" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2.5 px-4 rounded-xl transition flex items-center justify-center gap-2">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Reiniciar
+                    </button>
+                </div>
+
+                <div class="mt-6">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Velocidad de Ciclos</label>
+                    <input id="speedRange" type="range" min="500" max="3000" step="200" value="1500" class="w-full accent-blue-500 bg-slate-800 rounded-lg h-2 cursor-pointer">
+                    <div class="flex justify-between text-xs text-slate-500 mt-1">
+                        <span>Rápido</span>
+                        <span>Lento</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contadores de Semáforos -->
+            <div class="mt-6 pt-4 border-t border-slate-800">
+                <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Semáforos (S.O.)</h3>
+                <div class="space-y-2 text-xs font-mono bg-slate-950 p-3 rounded-xl border border-slate-900">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">sem_agente:</span>
+                        <span id="semAgente" class="text-emerald-400 font-bold">1</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">sem_fumador1:</span>
+                        <span id="semF1" class="text-amber-400 font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">sem_fumador2:</span>
+                        <span id="semF2" class="text-amber-400 font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">sem_fumador3:</span>
+                        <span id="semF3" class="text-amber-400 font-bold">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Zona Central: Mesa y Fumadores -->
+        <section class="md:col-span-2 flex flex-col gap-6">
+            
+            <!-- Mesa Compartida -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-blue-500/10 text-blue-400 text-xs px-3 py-1 rounded-bl-xl font-medium border-l border-b border-blue-500/20">
+                    Área Crítica / Mesa
+                </div>
+                
+                <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">Ingredientes en la Mesa</h2>
+                <div id="agentStatus" class="text-sm font-medium text-blue-300 mb-6">El agente está esperando...</div>
+
+                <div class="flex justify-center items-center gap-4 min-h-[90px]">
+                    <div id="item1" class="w-20 h-20 bg-slate-950 border border-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 opacity-40 transition-all duration-300 shadow-inner">
+                        <i data-lucide="package" class="w-6 h-6 text-slate-500"></i>
+                        <span class="text-xs text-slate-500 font-medium"> Vacío </span>
+                    </div>
+                    <div id="item2" class="w-20 h-20 bg-slate-950 border border-slate-800 rounded-xl flex flex-col items-center justify-center gap-1 opacity-40 transition-all duration-300 shadow-inner">
+                        <i data-lucide="package" class="w-6 h-6 text-slate-500"></i>
+                        <span class="text-xs text-slate-500 font-medium"> Vacío </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjetas de los 3 Fumadores -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                
+                <div id="cardF1" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center text-center transition-all duration-300 shadow-xl">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-blue-400 font-bold mb-2 border border-slate-700">F1</div>
+                    <h3 class="font-semibold text-sm text-slate-200">Fumador 1</h3>
+                    <p class="text-xs text-slate-400 mt-0.5 mb-3">Tiene: <b>Tabaco</b><br>Falta: Papel + Cerillas</p>
+                    <span id="badgeF1" class="mt-auto px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">Durmiendo</span>
+                </div>
+
+                <div id="cardF2" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center text-center transition-all duration-300 shadow-xl">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-blue-400 font-bold mb-2 border border-slate-700">F2</div>
+                    <h3 class="font-semibold text-sm text-slate-200">Fumador 2</h3>
+                    <p class="text-xs text-slate-400 mt-0.5 mb-3">Tiene: <b>Papel</b><br>Falta: Tabaco + Cerillas</p>
+                    <span id="badgeF2" class="mt-auto px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">Durmiendo</span>
+                </div>
+
+                <div id="cardF3" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center text-center transition-all duration-300 shadow-xl">
+                    <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-blue-400 font-bold mb-2 border border-slate-700">F3</div>
+                    <h3 class="font-semibold text-sm text-slate-200">Fumador 3</h3>
+                    <p class="text-xs text-slate-400 mt-0.5 mb-3">Tiene: <b>Cerillas</b><br>Falta: Tabaco + Papel</p>
+                    <span id="badgeF3" class="mt-auto px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">Durmiendo</span>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- Consola de Eventos / Log de Concurrencia -->
+        <section class="md:col-span-3 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+            <h2 class="text-sm font-semibold text-slate-200 border-b border-slate-800 pb-3 mb-3 flex items-center gap-2">
+                <i data-lucide="terminal" class="w-4 h-4 text-blue-400"></i> Consola del Sistema Operativo (Log de Hilos)
+            </h2>
+            <div id="consoleLog" class="bg-slate-950 border border-slate-900 rounded-xl p-4 h-40 overflow-y-auto font-mono text-xs text-slate-300 space-y-1.5 shadow-inner">
+                <div class="text-slate-500">[Sistema] Simulador inicializado. Presione "Iniciar Simulación" para comenzar.</div>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
