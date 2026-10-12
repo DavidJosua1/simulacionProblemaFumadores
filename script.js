@@ -103,7 +103,7 @@ const concepts = {
         description:
             "Es una parte del programa que accede a un recurso compartido y debe protegerse frente a accesos incompatibles.",
         example:
-            "El monitor controla el acceso a la mesa para que no se retiren ingredientes dos veces ni se coloque una nueva pareja mientras la anterior sigue en uso."
+            "La mesa es el recurso compartido. La parte en la que se retiran los ingredientes debe estar controlada para evitar que dos participantes intenten utilizarlos de forma incompatible."
     },
     race: {
         title: "Condición de carrera",
@@ -117,7 +117,7 @@ const concepts = {
         description:
             "Un conjunto de procesos queda bloqueado y ninguno puede avanzar porque espera recursos o acciones que dependen entre sí.",
         example:
-            "El monitor impone un protocolo de entrega y liberación de la mesa. No se informa un deadlock solo porque la aplicación esté pausada o esperando al agente."
+            "El protocolo evita que los fumadores retengan ingredientes mientras esperan otros. La selección por turnos ayuda a distribuir las oportunidades, aunque la equidad depende de que el agente siga proporcionando las parejas necesarias."
     },
     starvation: {
         title: "Inanición",
